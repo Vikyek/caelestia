@@ -1,0 +1,142 @@
+# --- Core environment ---------------------------------------------------------
+
+set -gx AWS_LC_SYS_NO_SCCACHE 1
+set -gx SCCACHE_IGNORE_PATHS ~/bin
+
+# SSH agent
+set -gx SSH_AUTH_SOCK $HOME/.bitwarden-ssh-agent.sock
+
+# Build cache dirs
+set -gx CCACHE_DIR $HOME/.cache/ccache
+set -gx SCCACHE_DIR $HOME/.cache/sccache
+
+
+# --- vfox (must load before PATH) --------------------------------------------
+
+vfox activate fish | source
+
+
+# --- Deterministic PATH -------------------------------------------------------
+
+# Personal tools
+fish_add_path ~/bin
+
+# Optional Nix
+if test -e ~/.nix-profile/bin
+    fish_add_path ~/.nix-profile/bin
+end
+
+# System
+fish_add_path /usr/local/bin
+fish_add_path /usr/local/sbin
+fish_add_path /usr/bin
+
+# Toolchains
+fish_add_path /usr/lib/rustup/bin
+fish_add_path /opt/cuda/bin
+fish_add_path /usr/lib/jvm/default/bin
+
+# Flatpak
+fish_add_path /var/lib/flatpak/exports/bin
+
+# Perl
+fish_add_path /usr/bin/site_perl
+fish_add_path /usr/bin/vendor_perl
+fish_add_path /usr/bin/core_perl
+
+
+# --- Lazy-loading modules (with safeguards) ----------------------------------
+
+# Starship (load on first prompt)
+function __mod_starship --on-event fish_prompt
+    if type -q starship
+        functions -e __mod_starship
+        starship init fish | source
+    else
+        functions -e __mod_starship
+    end
+end
+
+# Direnv (load on first directory change)
+function __mod_direnv --on-variable PWD
+    if type -q direnv
+        functions -e __mod_direnv
+        direnv hook fish | source
+    else
+        functions -e __mod_direnv
+    end
+end
+
+# Zoxide (load on first prompt)
+function __mod_zoxide --on-event fish_prompt
+    if type -q zoxide
+        functions -e __mod_zoxide
+        zoxide init fish --cmd cd | source
+    else
+        functions -e __mod_zoxide
+    end
+end
+
+# Caelestia colors (load on first prompt)
+function __mod_caelestia --on-event fish_prompt
+    if test -e ~/.local/state/caelestia/sequences.txt
+        functions -e __mod_caelestia
+        cat ~/.local/state/caelestia/sequences.txt 2>/dev/null
+    else
+        functions -e __mod_caelestia
+    end
+end
+
+# vfox (lazy reload to ensure shims are correct)
+function __mod_vfox --on-event fish_prompt
+    if type -q vfox
+        functions -e __mod_vfox
+        vfox activate fish | source
+    else
+        functions -e __mod_vfox
+    end
+end
+
+
+# --- Interactive shell setup --------------------------------------------------
+
+if status is-interactive
+    # Greeter (kept)
+    set -g fish_greeting "Welcome back, Viktoria."
+
+    # Better ls
+    abbr ls 'eza --icons --group-directories-first -1'
+
+    # Git abbreviations
+    abbr lg 'lazygit'
+    abbr gd 'git diff'
+    abbr ga 'git add .'
+    abbr gc 'git commit -am'
+    abbr gl 'git log'
+    abbr gs 'git status'
+    abbr gst 'git stash'
+    abbr gsp 'git stash pop'
+    abbr gp 'git push'
+    abbr gpl 'git pull'
+    abbr gsw 'git switch'
+    abbr gsm 'git switch main'
+    abbr gb 'git branch'
+    abbr gbd 'git branch -d'
+    abbr gco 'git checkout'
+    abbr gsh 'git show'
+
+    # ls shortcuts
+    abbr l 'ls'
+    abbr ll 'ls -l'
+    abbr la 'ls -a'
+    abbr lla 'ls -la'
+
+    # Foot terminal prompt markers
+    function mark_prompt_start --on-event fish_prompt
+        echo -en "\e]133;A\e\\"
+    end
+
+    # User config
+    source ~/.config/caelestia/user-config.fish 2>/dev/null
+    complete --command config --wraps git
+end

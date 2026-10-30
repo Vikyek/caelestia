@@ -1,7 +1,10 @@
 # version: 1.0.0
 
 add_newline = false
+scan_timeout = 2000
+command_timeout = 2000
 continuation_prompt = "[▸▹ ](dimmed white)"
+
 
 format = """($nix_shell$container$fill$git_metrics\n)$cmd_duration\
 $hostname\
@@ -314,3 +317,7 @@ unknown_msg = '[◌](bold dimmed yellow)'
 [spack]
 symbol = "◇ "
 format = " spack [$symbol$environment]($style)"
+
+[gcloud]
+format = ' on [$symbol$account(@$domain)(\($region\))]($style) '
+
