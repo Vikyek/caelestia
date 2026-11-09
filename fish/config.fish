@@ -78,6 +78,16 @@ if status is-interactive
         alias ll='eza -lah --icons=auto --git'
         alias la='eza -a --icons=auto'
         alias lt='eza --tree --icons=auto --level=2'
+
+        # Auto-replace inline "cd " with eza
+        function _eza_inline_cd_expand
+            if test (commandline -c) = "cd"
+                commandline -r "eza --icons=auto --group-directories-first "
+            else
+                commandline -i ' '
+            end
+        end
+        bind ' ' _eza_inline_cd_expand
     end
 
     if type -q batcat
@@ -221,3 +231,9 @@ function gapply
     find . -maxdepth 4 \( -name "*.porig" -o -name "*.orig" -o -name "*.bak" \) -delete 2>/dev/null
 end
 set -e CC; set -e CXX
+
+# devkitPro Switch Homebrew Toolchain
+set -gx DEVKITPRO /opt/devkitpro
+set -gx DEVKITARM /opt/devkitpro/devkitARM
+set -gx DEVKITA64 /opt/devkitpro/devkitA64
+fish_add_path $DEVKITPRO/tools/bin $DEVKITA64/bin
